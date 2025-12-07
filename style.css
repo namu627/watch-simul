@@ -1,0 +1,238 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h2 {
+    color: #34495e;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 10px;
+    margin-top: 30px;
+}
+
+/* --- 시계 보관함 스타일 (원목 디자인 및 유리창) --- */
+.watch-case-container {
+    margin-bottom: 40px;
+    max-width: 1000px; 
+    width: 90%; 
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.watch-case {
+    background-color: #4e342e;
+    background-image: linear-gradient(180deg, #4e342e 0%, #3e2723 100%);
+    border: 5px solid #3e2723;
+    border-radius: 10px;
+    padding: 20px;
+    height: 40vw; 
+    max-height: 440px; 
+    display: flex;
+    position: relative; 
+    perspective: 1000px; 
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.5s ease-in-out;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+.watch-case::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    background: 
+        linear-gradient(to right, #4e342e 0%, #4e342e 40px, transparent 40px, transparent calc(100% - 40px), #4e342e calc(100% - 40px), #4e342e 100%),
+        linear-gradient(to bottom, #4e342e 0%, #4e342e 40px, transparent 40px, transparent calc(100% - 40px), #4e342e calc(100% - 40px), #4e342e 100%);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    
+    border-radius: 10px;
+    transform-origin: top; 
+    transition: transform 0.8s ease-in-out, opacity 0.5s; 
+    z-index: 10;
+    
+    box-shadow: 
+        inset 0 0 10px rgba(255, 255, 255, 0.1), 
+        inset 0 0 0 5px rgba(255, 255, 255, 0.05); 
+    
+    backdrop-filter: blur(2px) brightness(0.9); 
+    -webkit-backdrop-filter: blur(2px) brightness(0.9);
+}
+
+.watch-case.open::before {
+    transform: rotateX(120deg);
+    opacity: 0; 
+    backdrop-filter: none; 
+    -webkit-backdrop-filter: none;
+}
+
+.watch-case.open {
+    background-color: #4e342e; 
+    background-image: none; 
+    height: 40vw; 
+    max-height: 440px;
+    cursor: default;
+}
+
+#casePrompt {
+    color: #ffcc80; 
+    font-size: 1.2em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s ease;
+    z-index: 11; 
+}
+
+.watch-case.open #casePrompt {
+    display: none;
+}
+
+.slots-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    z-index: 5; 
+}
+
+.slot {
+    width: 22%; 
+    height: 80%;
+    background-color: rgb(161, 161, 161); 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; 
+    transition: background-color 0.3s;
+}
+
+.slot.drag-over {
+    border: 2px solid #ffcc80; 
+}
+
+.watch-list-container {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.watch-list {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 20px 0;
+    padding-bottom: 30px; 
+    
+    width: 100%; 
+}
+
+
+.watch-list::-webkit-scrollbar {
+    display: none;
+}
+
+.watch-list {
+    -ms-overflow-style: none;
+    scrollbar-width: none; 
+}
+
+
+.watch-item {
+    width: 120px; 
+    height: 120px;
+    object-fit: contain; 
+    border: 1px solid #ccc;
+    border-radius: 50%; 
+    padding: 5px;
+    cursor: grab;
+    transition: transform 0.2s;
+    background-color: transparent; 
+    flex-shrink: 0; 
+}
+
+.watch-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dragging {
+    opacity: 0.5;
+}
+
+.slot > .watch-item {
+    width: 100%;
+    height: 100%;
+    border-radius: 0; 
+    border: none;
+    padding: 0;
+}
+
+.slot > img {
+    width: 100%; 
+    height: 100%;
+    object-fit: cover; 
+    background-color: transparent !important; 
+    cursor: default;
+}
+
+footer {
+    margin-top: 40px;
+    padding: 10px 0;
+    background-color: #eee;
+    color: #777;
+    font-size: 0.9em;
+}
+
+@media (max-width: 600px) {
+    
+    .watch-case-container {
+        width: 95%; 
+    }
+    
+    .watch-case {
+        height: 50vw; 
+        max-height: 300px;
+    }
+    
+    .watch-item {
+        width: 100px;
+        height: 100px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    #casePrompt {
+        font-size: 1em;
+    }
+}

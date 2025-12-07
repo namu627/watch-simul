@@ -27,7 +27,6 @@ h2 {
     margin-top: 30px;
 }
 
-/* --- 시계 보관함 스타일 (원목 디자인 및 유리창) --- */
 .watch-case-container {
     margin-bottom: 40px;
     max-width: 1000px; 
@@ -156,15 +155,13 @@ h2 {
 }
 
 
-.watch-list::-webkit-scrollbar {
-    display: none;
-}
-
 .watch-list {
-    -ms-overflow-style: none;
-    scrollbar-width: none; 
+    cursor: grab; /* 평소에는 grab 커서로 드래그 가능함을 알림 */
 }
 
+.watch-list.active-grab {
+    cursor: grabbing; /* 마우스를 누르고 있을 때 grabbing 커서로 변경 */
+}
 
 .watch-item {
     width: 120px; 

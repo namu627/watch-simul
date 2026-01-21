@@ -1,179 +1,131 @@
-const WATCH_FILENAMES = [
-    'Carl F. Bucherer Manero.png', 
-    'tudor blackbay 54.png',
-    'Grand Seiko sbgx261.png', 
-    'Grand Seiko sbgx355.png', 
-    'HAMILTON khaki.png',
-    'HAMILTON khaki auto engineered garments.png',
-    'HAMILTON khaki auto.png',
-    'HAMILTON khaki auto titanium.png',
-    'HAMILTON khaki murph.png', 
-    'cartier tank.png',
-    'OMEGA constellation.png',
-    'OMEGA seamaster-aqua-terra.png',
-    'LONGINES spirit pilot.png',
-    'LONGINES spirit.png',
-    'Vacheron Constantin overseas.png',
-    'seiko sbth007.png',
+// 브랜드 데이터를 포함한 배열
+const WATCH_DATA = [
+    { brand: 'Grand Seiko', file: 'Grand Seiko sbgx261.png' },
+    { brand: 'Grand Seiko', file: 'Grand Seiko sbgx355.png' },
+    { brand: 'Hamilton', file: 'HAMILTON khaki.png' },
+    { brand: 'Hamilton', file: 'HAMILTON khaki auto engineered garments.png' },
+    { brand: 'Hamilton', file: 'HAMILTON khaki auto.png' },
+    { brand: 'Hamilton', file: 'HAMILTON khaki auto titanium.png' },
+    { brand: 'Hamilton', file: 'HAMILTON khaki murph.png' },
+    { brand: 'Omega', file: 'OMEGA constellation.png' },
+    { brand: 'Omega', file: 'OMEGA seamaster-aqua-terra.png' },
+    { brand: 'Longines', file: 'LONGINES spirit pilot.png' },
+    { brand: 'Longines', file: 'LONGINES spirit.png' },
+    { brand: 'Cartier', file: 'cartier tank.png' },
+    { brand: 'Tudor', file: 'tudor blackbay 54.png' },
+    { brand: 'Vacheron Constantin', file: 'Vacheron Constantin overseas.png' },
+    { brand: 'Seiko', file: 'seiko sbth007.png' },
+    { brand: 'Carl F. Bucherer', file: 'Carl F. Bucherer Manero.png' }
 ];
+
 const IMAGE_BASE_PATH = 'images/';
 
 document.addEventListener('DOMContentLoaded', () => {
     const watchCase = document.getElementById('watchCase');
-    const slotsContainer = watchCase.querySelector('.slots-container');
-    const watchListContainer = document.querySelector('.watch-list');
+    const watchListContainer = document.getElementById('watchList');
+    const brandFilterContainer = document.getElementById('brandFilter');
     const slots = document.querySelectorAll('.slot');
-
     let draggedWatch = null;
 
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    watchListContainer.addEventListener('mousedown', (e) => {
-        isDown = true;
-        watchListContainer.classList.add('active-grab'); 
-        
-        startX = e.pageX - watchListContainer.offsetLeft;
-        scrollLeft = watchListContainer.scrollLeft;
+    // 1. 브랜드 필터 버튼 생성
+    const brands = ['ALL', ...new Set(WATCH_DATA.map(w => w.brand))];
+    brands.forEach(brand => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn' + (brand === 'ALL' ? ' active' : '');
+        btn.textContent = brand;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderWatchList(brand);
+        });
+        brandFilterContainer.appendChild(btn);
     });
 
-    watchListContainer.addEventListener('mouseleave', () => {
-        isDown = false;
-        watchListContainer.classList.remove('active-grab');
-    });
+    // 2. 시계 목록 렌더링 (보관함에 있는 것은 제외)
+    function renderWatchList(filterBrand = 'ALL') {
+        const watchesInSlots = Array.from(document.querySelectorAll('.slot img'))
+                                    .map(img => img.getAttribute('data-watch-id'));
 
-    watchListContainer.addEventListener('mouseup', () => {
-        isDown = false;
-        watchListContainer.classList.remove('active-grab');
-    });
+        watchListContainer.innerHTML = '';
+        const filtered = filterBrand === 'ALL' 
+            ? WATCH_DATA 
+            : WATCH_DATA.filter(w => w.brand === filterBrand);
 
-    watchListContainer.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        
-        const x = e.pageX - watchListContainer.offsetLeft;
-        const walk = (x - startX) * 1.5; 
-        
-        watchListContainer.scrollLeft = scrollLeft - walk;
-    });
-
-
-    function findFirstEmptySlot() {
-        for (const slot of slots) {
-            if (slot.childElementCount === 0) {
-                return slot;
+        filtered.forEach(watch => {
+            const watchId = watch.file.split('.')[0];
+            if (!watchesInSlots.includes(watchId)) {
+                const img = createWatchItem(watch.file);
+                watchListContainer.appendChild(img);
             }
-        }
-        return null;
+        });
     }
 
-    
+    function createWatchItem(fileName) {
+        const url = IMAGE_BASE_PATH + fileName;
+        const altText = fileName.split('.')[0];
+        const img = document.createElement('img');
+        img.src = url; img.alt = altText;
+        img.className = 'watch-item';
+        img.draggable = true;
+        img.setAttribute('data-watch-id', altText);
+        addDragListeners(img);
+        return img;
+    }
+
     function addDragListeners(item) {
         item.addEventListener('dragstart', (e) => {
             draggedWatch = item;
-            setTimeout(() => { item.classList.add('dragging'); }, 0);
-            e.dataTransfer.setData('text/plain', item.src);
+            item.classList.add('dragging');
         });
-
         item.addEventListener('dragend', () => {
-            draggedWatch.classList.remove('dragging');
+            item.classList.remove('dragging');
             draggedWatch = null;
         });
         
         item.addEventListener('click', (e) => { 
             e.stopPropagation(); 
-            
-             if (item.parentNode.classList.contains('slot')) {
-                watchListContainer.appendChild(item);
-                item.style.cursor = 'grab';
-            } 
-            else if (item.parentNode.classList.contains('watch-list') && watchCase.classList.contains('open')) {
-                const emptySlot = findFirstEmptySlot();
-
+            if (item.parentNode.classList.contains('slot')) {
+                moveToInventory(item);
+            } else if (watchCase.classList.contains('open')) {
+                const emptySlot = Array.from(slots).find(s => s.childElementCount === 0);
                 if (emptySlot) {
                     emptySlot.appendChild(item);
-                    item.style.cursor = 'default';
+                    item.style.cursor = 'pointer';
                 }
             }
         });
     }
 
-    WATCH_FILENAMES.forEach(fileName => {
-        const img = createWatchItem(fileName);
-        watchListContainer.appendChild(img);
-    });
-
-    function createWatchItem(fileName) {
-        const url = IMAGE_BASE_PATH + fileName;
-        const altText = fileName.split('.')[0];
-        
-        const img = document.createElement('img');
-        img.src = url; 
-        img.alt = altText;
-        img.className = 'watch-item';
-        img.draggable = true;
-        img.setAttribute('data-watch-id', altText);
-        
-        addDragListeners(img);
-        return img;
+    // 시계를 목록(인벤토리)으로 다시 보낼 때 필터 상태 체크
+    function moveToInventory(item) {
+        const currentFilter = document.querySelector('.filter-btn.active').textContent;
+        const watchData = WATCH_DATA.find(w => w.file.includes(item.alt));
+        if (currentFilter === 'ALL' || (watchData && watchData.brand === currentFilter)) {
+            watchListContainer.appendChild(item);
+            item.style.cursor = 'grab';
+        } else {
+            item.remove(); // 현재 필터에 안 맞으면 목록에서 일단 제거 (필터 변경 시 다시 나타남)
+        }
     }
 
-    
+    // 초기 실행
+    renderWatchList();
+
+    // 보관함 클릭 이벤트 (기존 디자인 유지)
     watchCase.addEventListener('click', () => {
-        const isCaseOpen = watchCase.classList.toggle('open');
-        
-        const casePrompt = document.getElementById('casePrompt');
-        if (isCaseOpen) {
-            casePrompt.style.display = 'none';
-        } else {
-            const hasWatches = Array.from(slots).some(slot => slot.querySelector('img'));
-            if (!hasWatches) {
-                casePrompt.style.display = 'block';
-            }
-        }
+        watchCase.classList.toggle('open');
     });
 
-    
+    // 드롭 이벤트
     slots.forEach(slot => {
-        slot.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            slot.classList.add('drag-over');
-        });
-
-        slot.addEventListener('dragover', (e) => {
-            e.preventDefault(); 
-        });
-
-        slot.addEventListener('dragleave', () => {
-            slot.classList.remove('drag-over');
-        });
-
+        slot.addEventListener('dragover', e => e.preventDefault());
         slot.addEventListener('drop', (e) => {
             e.preventDefault();
-            slot.classList.remove('drag-over');
-
             if (watchCase.classList.contains('open') && draggedWatch) {
-                
-                const placedWatch = slot.querySelector('.watch-item');
-                
-                if (placedWatch) {
-                    watchListContainer.appendChild(placedWatch);
-                    placedWatch.style.cursor = 'grab'; 
-                }
-                
+                const existing = slot.querySelector('.watch-item');
+                if (existing) moveToInventory(existing);
                 slot.appendChild(draggedWatch);
-                draggedWatch.style.cursor = 'default'; 
-            }
-        });
-        
-        slot.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            
-            const placedWatch = slot.querySelector('.watch-item');
-            if (placedWatch) {
-                 watchListContainer.appendChild(placedWatch);
-                 placedWatch.style.cursor = 'grab';
+                draggedWatch.style.cursor = 'pointer';
             }
         });
     });

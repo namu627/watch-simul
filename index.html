@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch collection simulator</title>
+    <title>Watch Collection Simulator</title>
     <link rel="stylesheet" href="style.css">
-    </head>
+</head>
 <body>
     <main>
         <section class="watch-case-container">
             <div id="watchCase" class="watch-case closed">
-                <div class="slots-container hidden">
+                <div class="slots-container">
                     <div class="slot" data-slot-id="1"></div>
                     <div class="slot" data-slot-id="2"></div>
                     <div class="slot" data-slot-id="3"></div>
@@ -23,7 +23,8 @@
 
         <section class="watch-list-container">
             <h2>Watches</h2>
-            <div class="watch-list">
+            <div id="brandFilter" class="brand-filter"></div>
+            <div id="watchList" class="watch-list">
                 </div>
         </section>
     </main>

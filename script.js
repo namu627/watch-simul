@@ -1,5 +1,6 @@
 const WATCH_FILENAMES = [
     'Carl F. Bucherer Manero.png', 
+    'tudor blackbay 54.png',
     'Grand Seiko sbgx261.png', 
     'Grand Seiko sbgx355.png', 
     'HAMILTON khaki.png',

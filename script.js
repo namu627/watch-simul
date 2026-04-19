@@ -1,6 +1,12 @@
 const IMAGE_BASE_PATH = 'images/';
 
-document.addEventListener('DOMContentLoaded', () => init(WATCH_DATA));
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof WATCH_DATA === 'undefined') {
+        console.error('watches.js가 로드되지 않았습니다.');
+        return;
+    }
+    init(WATCH_DATA);
+});
 
 function init(WATCH_DATA) {
     const watchCase = document.getElementById('watchCase');
@@ -9,7 +15,7 @@ function init(WATCH_DATA) {
     const slots = document.querySelectorAll('.slot');
     let draggedWatch = null;
 
-    // 1. 브랜드 필터 버튼 생성
+    // 브랜드 필터 버튼 생성
     const brands = ['ALL', ...new Set(WATCH_DATA.map(w => w.brand))];
     brands.forEach(brand => {
         const btn = document.createElement('button');
@@ -23,92 +29,159 @@ function init(WATCH_DATA) {
         brandFilterContainer.appendChild(btn);
     });
 
-    // 2. 시계 목록 렌더링 (보관함에 있는 것은 제외)
     function renderWatchList(filterBrand = 'ALL') {
-        const watchesInSlots = Array.from(document.querySelectorAll('.slot img'))
-                                    .map(img => img.getAttribute('data-watch-id'));
-
+        const watchesInSlots = new Set(
+            Array.from(document.querySelectorAll('.slot img'))
+                 .map(img => img.getAttribute('data-watch-id'))
+        );
         watchListContainer.innerHTML = '';
-        const filtered = filterBrand === 'ALL' 
-            ? WATCH_DATA 
-            : WATCH_DATA.filter(w => w.brand === filterBrand);
-
-        filtered.forEach(watch => {
-            const watchId = watch.file.split('.')[0];
-            if (!watchesInSlots.includes(watchId)) {
-                const img = createWatchItem(watch.file);
-                watchListContainer.appendChild(img);
-            }
-        });
+        (filterBrand === 'ALL' ? WATCH_DATA : WATCH_DATA.filter(w => w.brand === filterBrand))
+            .forEach(watch => {
+                const id = watch.file.replace(/\.[^.]+$/, '');
+                if (!watchesInSlots.has(id)) {
+                    watchListContainer.appendChild(createWatchItem(watch.file));
+                }
+            });
     }
 
     function createWatchItem(fileName) {
-        const url = IMAGE_BASE_PATH + fileName;
-        const altText = fileName.split('.')[0];
         const img = document.createElement('img');
-        img.src = url; img.alt = altText;
+        img.src = IMAGE_BASE_PATH + fileName;
+        img.alt = fileName.replace(/\.[^.]+$/, '');
         img.className = 'watch-item';
         img.draggable = true;
-        img.setAttribute('data-watch-id', altText);
-        addDragListeners(img);
+        img.setAttribute('data-watch-id', img.alt);
+        addEventListeners(img);
         return img;
     }
 
-    function addDragListeners(item) {
-        item.addEventListener('dragstart', (e) => {
+    function moveToSlot(item, slot) {
+        const existing = slot.querySelector('.watch-item');
+        if (existing) moveToInventory(existing);
+        slot.appendChild(item);
+    }
+
+    function moveToInventory(item) {
+        const currentFilter = document.querySelector('.filter-btn.active').textContent;
+        const watchId = item.getAttribute('data-watch-id');
+        const watch = WATCH_DATA.find(w => w.file.replace(/\.[^.]+$/, '') === watchId);
+        if (currentFilter === 'ALL' || (watch && watch.brand === currentFilter)) {
+            watchListContainer.appendChild(item);
+        } else {
+            item.remove();
+        }
+    }
+
+    function addEventListeners(item) {
+        // 데스크톱 드래그
+        item.addEventListener('dragstart', () => {
             draggedWatch = item;
-            item.classList.add('dragging');
+            setTimeout(() => item.classList.add('dragging'), 0);
         });
         item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
             draggedWatch = null;
         });
-        
-        item.addEventListener('click', (e) => { 
-            e.stopPropagation(); 
+
+        // 클릭 / 탭
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (item.parentNode.classList.contains('slot')) {
                 moveToInventory(item);
             } else if (watchCase.classList.contains('open')) {
                 const emptySlot = Array.from(slots).find(s => s.childElementCount === 0);
-                if (emptySlot) {
-                    emptySlot.appendChild(item);
-                    item.style.cursor = 'pointer';
-                }
+                if (emptySlot) moveToSlot(item, emptySlot);
             }
+        });
+
+        // 모바일 터치 드래그
+        addTouchDrag(item);
+    }
+
+    function addTouchDrag(item) {
+        let clone = null;
+        let startX, startY, isDragging = false;
+
+        item.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+            isDragging = false;
+        }, { passive: true });
+
+        item.addEventListener('touchmove', (e) => {
+            const t = e.touches[0];
+            if (!isDragging) {
+                if (Math.hypot(t.clientX - startX, t.clientY - startY) < 8) return;
+                if (!watchCase.classList.contains('open')) return;
+                isDragging = true;
+                draggedWatch = item;
+                item.classList.add('dragging');
+                clone = item.cloneNode(true);
+                clone.className = 'touch-clone';
+                document.body.appendChild(clone);
+            }
+            e.preventDefault();
+            clone.style.left = t.clientX + 'px';
+            clone.style.top = t.clientY + 'px';
+        }, { passive: false });
+
+        item.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            clone.remove();
+            clone = null;
+            item.classList.remove('dragging');
+
+            const t = e.changedTouches[0];
+            item.style.visibility = 'hidden';
+            const target = document.elementFromPoint(t.clientX, t.clientY);
+            item.style.visibility = '';
+
+            const targetSlot = target?.closest('.slot');
+            if (targetSlot && watchCase.classList.contains('open')) {
+                moveToSlot(draggedWatch, targetSlot);
+            }
+            draggedWatch = null;
+            isDragging = false;
         });
     }
 
-    // 시계를 목록(인벤토리)으로 다시 보낼 때 필터 상태 체크
-    function moveToInventory(item) {
-        const currentFilter = document.querySelector('.filter-btn.active').textContent;
-        const watchData = WATCH_DATA.find(w => w.file.includes(item.alt));
-        if (currentFilter === 'ALL' || (watchData && watchData.brand === currentFilter)) {
-            watchListContainer.appendChild(item);
-            item.style.cursor = 'grab';
-        } else {
-            item.remove(); // 현재 필터에 안 맞으면 목록에서 일단 제거 (필터 변경 시 다시 나타남)
-        }
-    }
-
-    // 초기 실행
     renderWatchList();
 
-    // 보관함 클릭 이벤트 (기존 디자인 유지)
-    watchCase.addEventListener('click', () => {
-        watchCase.classList.toggle('open');
-    });
+    watchCase.addEventListener('click', () => watchCase.classList.toggle('open'));
 
-    // 드롭 이벤트
+    // 슬롯 드래그 이벤트
     slots.forEach(slot => {
-        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('dragenter', (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
+        slot.addEventListener('dragover', (e) => e.preventDefault());
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
         slot.addEventListener('drop', (e) => {
             e.preventDefault();
+            slot.classList.remove('drag-over');
             if (watchCase.classList.contains('open') && draggedWatch) {
-                const existing = slot.querySelector('.watch-item');
-                if (existing) moveToInventory(existing);
-                slot.appendChild(draggedWatch);
-                draggedWatch.style.cursor = 'pointer';
+                moveToSlot(draggedWatch, slot);
             }
         });
+        slot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const watch = slot.querySelector('.watch-item');
+            if (watch) moveToInventory(watch);
+        });
+    });
+
+    // 시계 목록 마우스 드래그 스크롤
+    let isScrolling = false, scrollStartX, scrollLeft;
+    watchListContainer.addEventListener('mousedown', (e) => {
+        isScrolling = true;
+        scrollStartX = e.pageX - watchListContainer.offsetLeft;
+        scrollLeft = watchListContainer.scrollLeft;
+    });
+    watchListContainer.addEventListener('mouseleave', () => { isScrolling = false; });
+    watchListContainer.addEventListener('mouseup', () => { isScrolling = false; });
+    watchListContainer.addEventListener('mousemove', (e) => {
+        if (!isScrolling) return;
+        e.preventDefault();
+        const x = e.pageX - watchListContainer.offsetLeft;
+        watchListContainer.scrollLeft = scrollLeft - (x - scrollStartX) * 1.5;
     });
 }

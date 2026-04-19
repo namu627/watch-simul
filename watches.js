@@ -1,0 +1,20 @@
+const WATCH_DATA = [
+  { "brand": "Grand Seiko", "file": "Grand Seiko sbgx261.png" },
+  { "brand": "Grand Seiko", "file": "Grand Seiko sbgx355.png" },
+  { "brand": "Hamilton", "file": "HAMILTON khaki.png" },
+  { "brand": "Hamilton", "file": "HAMILTON khaki auto engineered garments.png" },
+  { "brand": "Hamilton", "file": "HAMILTON khaki auto.png" },
+  { "brand": "Hamilton", "file": "HAMILTON khaki auto titanium.png" },
+  { "brand": "Hamilton", "file": "HAMILTON khaki murph.png" },
+  { "brand": "Omega", "file": "OMEGA constellation.png" },
+  { "brand": "Omega", "file": "OMEGA seamaster-aqua-terra.png" },
+  { "brand": "Longines", "file": "LONGINES spirit pilot.png" },
+  { "brand": "Longines", "file": "LONGINES spirit.png" },
+  { "brand": "Cartier", "file": "cartier tank.png" },
+  { "brand": "Tudor", "file": "tudor blackbay 54.png" },
+  { "brand": "Vacheron Constantin", "file": "Vacheron Constantin overseas.png" },
+  { "brand": "Seiko", "file": "seiko sbth007.png" },
+  { "brand": "Carl F. Bucherer", "file": "Carl F. Bucherer Manero.png" },
+  { "brand": "Frederique Constant", "file": "frederiqueconstant_moneta.png" },
+  { "brand": "Jaeger-LeCoultre", "file": "jaeger-lecoultre_master_ultra_thin.png" }
+];

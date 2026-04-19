@@ -1,26 +1,8 @@
-// 브랜드 데이터를 포함한 배열
-const WATCH_DATA = [
-    { brand: 'Grand Seiko', file: 'Grand Seiko sbgx261.png' },
-    { brand: 'Grand Seiko', file: 'Grand Seiko sbgx355.png' },
-    { brand: 'Hamilton', file: 'HAMILTON khaki.png' },
-    { brand: 'Hamilton', file: 'HAMILTON khaki auto engineered garments.png' },
-    { brand: 'Hamilton', file: 'HAMILTON khaki auto.png' },
-    { brand: 'Hamilton', file: 'HAMILTON khaki auto titanium.png' },
-    { brand: 'Hamilton', file: 'HAMILTON khaki murph.png' },
-    { brand: 'Omega', file: 'OMEGA constellation.png' },
-    { brand: 'Omega', file: 'OMEGA seamaster-aqua-terra.png' },
-    { brand: 'Longines', file: 'LONGINES spirit pilot.png' },
-    { brand: 'Longines', file: 'LONGINES spirit.png' },
-    { brand: 'Cartier', file: 'cartier tank.png' },
-    { brand: 'Tudor', file: 'tudor blackbay 54.png' },
-    { brand: 'Vacheron Constantin', file: 'Vacheron Constantin overseas.png' },
-    { brand: 'Seiko', file: 'seiko sbth007.png' },
-    { brand: 'Carl F. Bucherer', file: 'Carl F. Bucherer Manero.png' }
-];
-
 const IMAGE_BASE_PATH = 'images/';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => init(WATCH_DATA));
+
+function init(WATCH_DATA) {
     const watchCase = document.getElementById('watchCase');
     const watchListContainer = document.getElementById('watchList');
     const brandFilterContainer = document.getElementById('brandFilter');
@@ -129,4 +111,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
+}
